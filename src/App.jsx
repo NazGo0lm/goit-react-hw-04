@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import SearchBar from "./components/SearchBar/SearchBar";
 import { getPhotos } from "./components/apiPhotos/photos";
 import ImageGallery from "./components/ImageGallery/ImageGallery";
-import { ErrorMessage } from "formik";
+
 import LoadMoreBtn from "./components/LoadMoreBtn/LoadMoreBtn";
 import Loader from "./components/Loader/Loader";
 import ImageModal from "./components/ImageModal/ImageModal";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import ErrorMessage from "./components/ErrorMessage/ErrorMessage";
 //import { Audio } from 'react-loader-spinner';
 
 const App = () => {
@@ -23,7 +24,7 @@ const App = () => {
   const [modal, setModal] = useState(false);
   const [modalUrl, setModalUrl] = useState("");
   const [modalAlt, setModalAlt] = useState("");
-  const [totalPage, setTotalPage] = useState(0);
+  //const [totalPage, setTotalPage] = useState(0);
 
   useEffect(() => {
     if (!query) return;
@@ -35,18 +36,20 @@ const App = () => {
           query,
           pages
         );
-        if (!results.length) {
-          setEmpty(true)
-          return toast.error("There is no matches to yout request. Try again!")
-           
+        if (results.length === 0) {
+          toast.error("There is no matches to yout request. PLS Try again!");
+          setLoader(false);
+          setEmpty(true);
+          return;
+        
         }
         setImages(previmages => [...previmages, ...results]);
         setVisible(pages < total_pages)
-        setTotalPage(0 + total_pages)
-        console.log(total_pages)
+        //setTotalPage(0 + total_pages)
+        //console.log(total_pages)
         //console.log(totalPage)
       } catch(error) {
-        setError(error)
+        setError(error.message)
         
       } 
       finally {
@@ -70,7 +73,7 @@ const App = () => {
   }
   const onLoadMore = () => {
       setPages((page) => page + 1); 
-      totalPage === pages && console.log('sadas');
+      //totalPage === pages && console.log('sadas');
       
 
   }  
@@ -89,6 +92,9 @@ const App = () => {
   
   return (
     <>
+      <div>
+        <Toaster position="top-center" />
+      </div>
       <SearchBar onSubmit={onSubmit} />
       {images.length > 0 && <ImageGallery openModal={openModal} images={images} />}
       {visible && <LoadMoreBtn onClick={onLoadMore} /* disabled={loader} */ >Load More</LoadMoreBtn>}
@@ -100,8 +106,8 @@ const App = () => {
       
       
 
-      {error && <ErrorMessage />}
-      {empty && <p>Sorry. There are no images ... 😭</p>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {empty && <ErrorMessage >Sorry, there are no images...</ErrorMessage>}
       <ImageModal
         modalIsOpen={modal}
         src={modalUrl}
